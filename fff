@@ -139,12 +139,6 @@ get_ls_colors() {
     export "${ls_cols[@]}" &>/dev/null
 }
 
-get_w3m_path() {
-    # Find the path to the w3m-img library.
-    w3m_paths=(/usr/{local/,}{lib,libexec,lib64,libexec64}/w3m/w3mi*)
-    read -r w3m _ < <(type -p w3mimgdisplay "${w3m_paths[@]}")
-}
-
 get_mime_type() {
     # Get a file's mime_type.
     mime_type=$(file "-${file_flags:-biL}" "$1" 2>/dev/null)
@@ -274,7 +268,7 @@ print_line() {
 
     # Color files based on file extension and LS_COLORS.
     # Check if file extension adheres to POSIX naming
-    # stardard before checking if it's a variable.
+    # stardard before checking if its a variable.
     elif [[ $FFF_LS_COLORS == 1 &&
             $file_ext != "$file_name" &&
             $file_ext =~ ^[a-zA-Z0-9_]*$ ]]; then
@@ -283,6 +277,12 @@ print_line() {
 
     else
         format+=\\e[${fi:-37}m
+    fi
+
+    if [ $DRAWING ]
+    then
+        get_mime_type "${list[scroll]}"
+        [[ $mime_type == image/* ]] && wayPreviewClient "${list[$1]}" 2> /dev/null &
     fi
 
     # If the list item is under the cursor.
@@ -358,88 +358,14 @@ draw_dir() {
 }
 
 draw_img() {
-    # Draw an image file on the screen using w3m-img.
-    # We can use the framebuffer; set win_info_cmd as appropriate.
-    [[ $(tty) == /dev/tty[0-9]* && -w /dev/fb0 ]] &&
-        win_info_cmd=fbset
-
-    # X isn't running and we can't use the framebuffer, do nothing.
-    [[ -z $DISPLAY && $win_info_cmd != fbset ]] &&
-        return
-
-    # File isn't an image file, do nothing.
-    get_mime_type "${list[scroll]}"
-    [[ $mime_type != image/* ]] &&
-        return
-
-    # w3m-img isn't installed, do nothing.
-    type -p "$w3m" &>/dev/null || {
-        cmd_line "error: Couldn't find 'w3m-img', is it installed?"
-        return
-    }
-
-    # $win_info_cmd isn't installed, do nothing.
-    type -p "${win_info_cmd:=xdotool}" &>/dev/null || {
-        cmd_line "error: Couldn't find '$win_info_cmd', is it installed?"
-        return
-    }
-
-    # Get terminal window size in pixels and set it to WIDTH and HEIGHT.
-    if [[ $win_info_cmd == xdotool ]]; then
-        IFS=$'\n' read -d "" -ra win_info \
-            < <(xdotool getactivewindow getwindowgeometry --shell)
-
-        declare "${win_info[@]}" &>/dev/null || {
-            cmd_line "error: Failed to retrieve window size."
-            return
-        }
+    if $DRAWING
+    then
+        DRAWING=false
+        wayPreviewClient --quit 2> /dev/null &
     else
-        [[ $(fbset --show) =~ .*\"([0-9]+x[0-9]+)\".* ]]
-        IFS=x read -r WIDTH HEIGHT <<< "${BASH_REMATCH[1]}"
+        DRAWING=true
+        wayPreviewServer 2> /dev/null && wayPreviewClient "${list[cursor]}" 2> /dev/null &
     fi
-
-    # Get the image size in pixels.
-    read -r img_width img_height < <("$w3m" <<< "5;${list[scroll]}")
-
-    # Substract the status_line area from the image size.
-    ((HEIGHT=HEIGHT-HEIGHT*5/LINES))
-
-    ((img_width > WIDTH)) && {
-        ((img_height=img_height*WIDTH/img_width))
-        ((img_width=WIDTH))
-    }
-
-    ((img_height > HEIGHT)) && {
-        ((img_width=img_width*HEIGHT/img_height))
-        ((img_height=HEIGHT))
-    }
-
-    clear_screen
-    status_line "${list[scroll]}"
-
-    # Add a small delay to fix issues in VTE terminals.
-    ((BASH_VERSINFO[0] > 3)) &&
-        read "${read_flags[@]}" -srn 1
-
-    # Display the image.
-    printf '0;1;%s;%s;%s;%s;;;;;%s\n3;\n4\n' \
-        "${FFF_W3M_XOFFSET:-0}" \
-        "${FFF_W3M_YOFFSET:-0}" \
-        "$img_width" \
-        "$img_height" \
-        "${list[scroll]}" | "$w3m" &>/dev/null
-
-    # Wait for user input.
-    read -ern 1
-
-    # Clear the image.
-    printf '6;%s;%s;%s;%s\n3;' \
-        "${FFF_W3M_XOFFSET:-0}" \
-        "${FFF_W3M_YOFFSET:-0}" \
-        "$WIDTH" \
-        "$HEIGHT" | "$w3m" &>/dev/null
-
-    redraw
 }
 
 redraw() {
@@ -1124,7 +1050,6 @@ main() {
 
     get_os
     get_term_size
-    get_w3m_path
     setup_options
     setup_terminal
     redraw full
