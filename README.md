@@ -3,6 +3,7 @@
 <a href="https://asciinema.org/a/qvNlrFrGB3xKZXb6GkremjZNp" target="_blank"><img src="https://asciinema.org/a/qvNlrFrGB3xKZXb6GkremjZNp.svg" alt="img" height="210px" align="right"/></a>
 
 A simple file manager written in `bash`.
+This fork adds out of the box support for [wayPreview](https://github.com/Stivvo/wayPreview), a wayland native and terminal emulator independent image previewer.
 
 <a href="https://travis-ci.org/dylanaraps/fff"><img src="https://travis-ci.org/dylanaraps/fff.svg?branch=master"></a>
 <a href="https://github.com/dylanaraps/fff/releases"><img src="https://img.shields.io/github/release/dylanaraps/fff.svg"></a>
@@ -18,7 +19,7 @@ A simple file manager written in `bash`.
 - Tab completion for all commands!
 - Automatic CD on exit (*see [setup](#cd-on-exit)*)
 - Works as a **file picker** in `vim`/`neovim` ([**link**](https://github.com/dylanaraps/fff.vim))!
-- **Display images with w3m-img!**
+- Image previews with wayPreview
 - Supports `$CDPATH`.
 
 
@@ -58,9 +59,7 @@ A simple file manager written in `bash`.
 
 **Dependencies for image display**
 
-- `w3m-img`
-- `xdotool` for X.
-- `fbset` for the framebuffer.
+- `wayPreview`
 
 
 ## Installation
@@ -138,7 +137,7 @@ e: refresh current dir
 !: open shell in current dir
 
 x: view file/dir attributes
-i: display image with w3m-img
+i: toggle image preview with wayPreview
 
 down:  scroll down
 up:    scroll up
@@ -239,10 +238,6 @@ export FFF_FAV7=
 export FFF_FAV8=
 export FFF_FAV9=
 
-# w3m-img offsets.
-export FFF_W3M_XOFFSET=0
-export FFF_W3M_YOFFSET=0
-
 # File format.
 # Customize the item string.
 # Format ('%f' is the current file): "str%fstr"
@@ -323,7 +318,6 @@ export FFF_KEY_CLEAR="c"
 export FFF_KEY_RENAME="r"
 export FFF_KEY_MKDIR="n"
 export FFF_KEY_MKFILE="f"
-export FFF_KEY_IMAGE="i" # display image with w3m-img
 
 ### Miscellaneous
 
