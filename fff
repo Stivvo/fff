@@ -2,6 +2,8 @@
 #
 # fff - fucking fast file-manager.
 
+DRAWING=false
+
 get_os() {
     # Figure out the current operating system to set some specific variables.
     # '$OSTYPE' typically stores the name of the OS kernel.
@@ -282,7 +284,7 @@ print_line() {
     if [ $DRAWING ]
     then
         get_mime_type "${list[scroll]}"
-        [[ $mime_type == image/* ]] && wayPreviewClient "${list[$1]}" 2> /dev/null &
+        [[ $mime_type == image/* ]] && wayPreviewClient "${list[$1]}" --fit 2> /dev/null &
     fi
 
     # If the list item is under the cursor.
@@ -364,7 +366,7 @@ draw_img() {
         wayPreviewClient --quit 2> /dev/null &
     else
         DRAWING=true
-        wayPreviewServer 2> /dev/null && wayPreviewClient "${list[cursor]}" 2> /dev/null &
+        wayPreviewWrapper.sh "${list[cursor]}" 2> /dev/null &
     fi
 }
 
