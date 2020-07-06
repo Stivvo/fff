@@ -19,7 +19,7 @@ This fork adds out of the box support for [wayPreview](https://github.com/Stivvo
 - Tab completion for all commands!
 - Automatic CD on exit (*see [setup](#cd-on-exit)*)
 - Works as a **file picker** in `vim`/`neovim` ([**link**](https://github.com/dylanaraps/fff.vim))!
-- Image previews with wayPreview
+- Image previews with wayPreview (uses [shell wrappers](https://github.com/Stivvo/wayPreview/tree/master/wrappers))
 - Supports `$CDPATH`.
 
 
