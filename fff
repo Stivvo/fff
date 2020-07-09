@@ -990,6 +990,7 @@ key() {
             [[ ${FFF_CD_ON_EXIT:=1} == 1 ]] &&
                 printf '%s\n' "$PWD" > "$FFF_CD_FILE"
 
+            [[ $DRAWING ]] && wayPreviewClient --quit 2> /dev/null
             exit
         ;;
     esac
