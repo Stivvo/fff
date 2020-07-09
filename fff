@@ -362,8 +362,11 @@ draw_img() {
         DRAWING=false
         wayPreviewClient --quit 2> /dev/null &
     else
-        DRAWING=true
-        wrapWayPserver.sh "${list[scroll]}" 2> /dev/null &
+        get_mime_type "${list[scroll]}"
+        [[ $mime_type == image/* ]] && {
+            DRAWING=true
+            wrapWayPserver.sh "${list[scroll]}" 2> /dev/null &
+        }
     fi
 }
 
