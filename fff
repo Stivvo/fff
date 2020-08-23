@@ -285,7 +285,7 @@ print_line() {
     (($1 == scroll)) &&
         format+="\\e[1;3${FFF_COL4:-6};7m" && $DRAWING && {
             get_mime_type "${list[scroll]}"
-            [[ $mime_type == image/* ]] && wrapWayPclient.sh "${list[$1]}" 2> /dev/null &
+            [[ $mime_type == image/* ]] && wrapWayPclient.sh --socket $PREVIEWCOUNT "${list[$1]}" 2> /dev/null &
     }
 
     # If the list item is marked for operation.
@@ -360,12 +360,17 @@ draw_img() {
     if $DRAWING
     then
         DRAWING=false
-        wayPreviewClient --quit 2> /dev/null &
+        wayPreviewClient --socket $PREVIEWCOUNT --quit 2> /dev/null &
     else
         get_mime_type "${list[scroll]}"
         [[ $mime_type == image/* ]] && {
             DRAWING=true
-            wrapWayPserver.sh "${list[scroll]}" 2> /dev/null &
+            COUNTFILE=/tmp/wayPreviewCount
+            [ ! -f $COUNTFILE ] && echo "-1" > $COUNTFILE
+            IFS=$'\n' read -d "" -ra PREVIEWCOUNT < $COUNTFILE
+            ((PREVIEWCOUNT++))
+            printf $PREVIEWCOUNT > $COUNTFILE
+            wrapWayPserver.sh "${list[scroll]}" --socket $PREVIEWCOUNT 2> /dev/null &
         }
     fi
 }
@@ -990,7 +995,7 @@ key() {
             [[ ${FFF_CD_ON_EXIT:=1} == 1 ]] &&
                 printf '%s\n' "$PWD" > "$FFF_CD_FILE"
 
-            [[ $DRAWING ]] && wayPreviewClient --quit 2> /dev/null
+            [[ $DRAWING ]] && wayPreviewClient --socket $PREVIEWCOUNT --quit 2> /dev/null
             exit
         ;;
     esac
